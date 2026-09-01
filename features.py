@@ -73,3 +73,49 @@ rs = avg_gain / avg_loss
 data["rsi_14"] = 100 - (100 / (1 + rs))
 
 print(data[["Close", "rsi_14"]].tail(15))
+
+# First 200 days of 2015 should be NaN, so this will drop any features still NaN
+data_clean = data.dropna()
+
+print(f"Original rows: {len(data)}")
+print(f"Rows after dropping NaN: {len(data_clean)}")
+
+# Now, we will look FOWARD, determining if price will be higher in 5 trading days from now?
+future_price = data_clean["Close"].shift(-5)
+
+# Comparing first but casting to a float value so NaN values can move through
+target = (future_price > data_clean["Close"]).astype(float)
+target[future_price.isna()] = float("nan")
+
+# Assigning back on an explicit copy
+data_clean = data_clean.copy()
+data_clean["target"] = target
+
+print(data_clean[["Close", "target"]].tail(15))
+
+# Drop rows with unknown price targets
+data_final = data_clean.dropna(subset=["target"])
+data_final = data_final.copy()
+data_final["target"] = data_final["target"].astype(int)
+
+print(f"Final dataset ready for modeling: {len(data_final)} rows")
+
+# Train/test split. Making sure to do chronologically w/o shuffling
+feature_cols = [
+    "return_5d", "return_20d", "return_60d", "return_252d",
+    "sma_20", "sma_50", "sma_200", "price_vs_sma20", "sma50_vs_sma200",
+    "volume_ratio", "volatility_20d", "rsi_14"
+]
+
+X = data_final[feature_cols] # inputs
+y = data_final["target"]     # outputs
+
+split_index = int(len(data_final) * 0.8) #80% train, 20% test
+
+X_train, X_test = X.iloc[:split_index], X.iloc[split_index:]
+y_train, y_test = y.iloc[:split_index], y.iloc[split_index:]
+
+print(f"Training rows: {len(X_train)} (earliest data)")
+print(f"Testing rows: {len(X_test)} (most recent, held out)")
+print(f"Training date range: {X_train.index.min()} to {X_train.index.max()}")
+print(f"Testing date range: {X_test.index.min()} to {X_test.index.max()}")
