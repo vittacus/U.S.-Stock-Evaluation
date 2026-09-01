@@ -63,8 +63,32 @@ Three metrics were compared against buy-and-hold:
 
 **Neither model beat buy-and-hold on raw return.** Random Forest predicted "up" on 97% of test days, nearly identical to always being invested, so it took on the same risk as buy-and-hold while capturing less upside, the worst outcome of the three.
 
-**Logistic Regression told a different story.** By trading far more selectively (only 85 of 535 days), it earned less total return but achieved the *highest* Sharpe ratio and by far the lowest drawdown of any approach — including buy-and-hold. This demonstrates a real, general tradeoff in quantitative finance: total return and risk-adjusted return are not the same question, and a model that "loses" on one metric can meaningfully "win" on the other.
+**Logistic Regression told a different story.** By trading far more selectively (only 85 of 535 days), it earned less total return but achieved the *highest* Sharpe ratio and by far the lowest drawdown of any approach, including buy-and-hold. This demonstrates a real, general tradeoff in quantitative finance: total return and risk-adjusted return are not the same question, and a model that "loses" on one metric can meaningfully "win" on the other.
 
-**Feature importance was consistent with financial intuition.** Both models leaned most heavily on moving-average-based features (particularly the golden/death cross signal, `sma50_vs_sma200`), while short-term signals like 5-day return and volume ratio mattered least — suggesting 5-day direction is driven more by prevailing trend than by short-term noise. One nuance worth flagging: Logistic Regression's `sma_200` coefficient came out slightly negative despite the feature's high overall importance — a known effect of **multicollinearity**, since `sma_20`, `sma_50`, `sma_200`, and `price_vs_sma20` are all derived from overlapping price windows and are highly correlated with each other, which can cause a linear model to assign an unintuitively-signed weight to one correlated feature even when the group as a whole matters.
+**Feature importance was consistent with financial intuition.** Both models leaned most heavily on Moving Average based features (particularly the golden/death cross signal, `sma50_vs_sma200`), while short term signals like 5-day return and volume ratio mattered least. This suggests 5-day direction is driven more by prevailing trend than by short term noise. One nuance worth flagging: Logistic Regression's `sma_200` coefficient came out slightly negative despite the feature's high overall importance, a known effect of **multicollinearity**, since `sma_20`, `sma_50`, `sma_200`, and `price_vs_sma20` are all derived from overlapping price windows and are highly correlated with each other. This can therefore cause a linear model to assign an unintuitively signed weight to one correlated feature even when the group as a whole matters.
 
 ## Limitations
+- Tested on a single ETF over a single historical period, with results that may not generalize to other assets or market regimes (However, the purpose of this project was to test an ETF seen as "safe" by most long-term investors)
+- No transaction costs, slippage, or taxes modeled in the backtest. A real implementation would likely see the more frequently-trading Random Forest strategy's edge erode further
+- The 5-day forward target means the most recent ~5 rows of any dataset can never be validated until that time has actually passed, which is a structural constraint of any forward-looking backtest
+- Backtested on one continuous period. This means results weren't cross-validated across multiple non-overlapping time windows
+
+## What I'd Build Next
+- Re-run this same pipeline on individual stocks and other ETFs to see whether the trend-over-noise finding holds generally
+- Add transaction cost and slippage assumptions to the backtest for a more realistic return estimate
+- Extend to a daily-refreshing "live" inference script that scores the latest available data using the already-trained model
+- Test alternate target horizons (1 day, 10 day, 20 day) to see whether prediction quality improves at other timeframes
+
+## Tech Stack
+
+Python · pandas · scikit-learn · yfinance · Streamlit · Plotly
+
+## Project Structure
+
+```
+get_data.py        → pulls and saves historical VOO data via yfinance
+features.py        → builds all five feature families, target label, and train/test split
+train_model.py      → trains Logistic Regression and Random Forest classifiers
+backtest.py         → converts predictions into a strategy and computes performance metrics
+app.py              → Streamlit dashboard visualizing all of the above
+```
