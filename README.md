@@ -4,7 +4,7 @@ A machine learning pipeline that predicts short-term price direction for VOO (Va
 
 **[Live Dashboard](#)** *(https://voo-quant-strategy.streamlit.app/)*
 
-![Dashboard preview](#) *(optional: drop a screenshot of your equity curve chart here)*
+## Dashboard Preview <img width="1821" height="628" alt="Screenshot 2026-09-01 at 2 03 32 PM" src="https://github.com/user-attachments/assets/a1d22f2a-b498-4d62-80ac-2789c079f3b0" />
 
 ---
 
