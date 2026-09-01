@@ -14,6 +14,7 @@ X_test_scaled = scaler.transform(X_test)
 log_model = LogisticRegression(max_iter=1000, class_weight="balanced")
 log_model.fit(X_train_scaled, y_train)
 log_predictions = log_model.predict(X_test_scaled)
+log_coefficients = pd.Series(log_model.coef_[0], index=X_train.columns)
 
 print("Logistic Regression")
 print(f"Accuracy: {accuracy_score(y_test, log_predictions):.4f}")

@@ -15,6 +15,10 @@ def max_drawdown(cumulative_returns):
     drawdown = (cumulative_returns - running_max) / running_max
     return drawdown.min()
 
+def drawdown_series(cumulative_returns):
+    running_max = cumulative_returns.cummax()
+    return (cumulative_returns - running_max) / running_max
+
 def run_backtest(predictions, label):
     signal = pd.Series(predictions, index=X_test.index)
     position = signal.shift(1).fillna(0)
@@ -32,7 +36,7 @@ def run_backtest(predictions, label):
     print(f"Max Drawdown: {drawdown:.2f}%")
     print(f"Days in market: {int(days_in_market)} / {len(position)}")
 
-    return strategy_cumulative
+    return strategy_cumulative, strategy_daily_return
 
 # Buy & Hold
 buyhold_cumulative = (1 + daily_return_test).cumprod()
@@ -43,5 +47,5 @@ print(f"Max Drawdown: {max_drawdown(buyhold_cumulative) * 100:.2f}%")
 print(f"Days in market: {len(daily_return_test)} / {len(daily_return_test)}")
 
 # Both model strategies
-rf_cumulative = run_backtest(rf_predictions, "Random Forest Strategy")
-log_cumulative = run_backtest(log_predictions, "Logistic Regression Strategy")
+rf_cumulative, rf_daily_return = run_backtest(rf_predictions, "Random Forest Strategy")
+log_cumulative, log_daily_return = run_backtest(log_predictions, "Logistic Regression Strategy")
